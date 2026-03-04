@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYOND INTIMA — המשחק</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@300;400;600&family=Heebo:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:#080507; --gold:#C9A96E; --gold-lt:#E8D5B0; --gold-dk:#9A7A48; --cream:#F9F3EC;
+  --bedroom:#8B3058; --kitchen:#A0522D; --salon:#2C4888; --spa:#5B3A7E;
+  --p1:#E8B4C8; --p2:#B4C8E8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100%;background:#080507;font-family:'Heebo',sans-serif;color:var(--cream);overflow-x:hidden;}
+
+/* ── LAYOUT ── */
+.game-wrap{display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;gap:20px;max-width:1100px;margin:0 auto;}
+
+/* ── HEADER ── */
+.game-header{text-align:center;}
+.gh-byond{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:300;letter-spacing:.45em;
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold),var(--gold-dk));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.gh-intima{font-family:'Cinzel',serif;font-size:.75rem;font-weight:300;letter-spacing:.6em;
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:2px;}
+.gold-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:10px auto;}
+
+/* ── SCOREBOARD ── */
+.scoreboard{
+  display:flex;gap:20px;width:100%;max-width:720px;
+}
+.player-score{
+  flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.2);
+  border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;
+  position:relative;overflow:hidden;transition:border-color .3s;
+}
+.player-score.active{border-color:var(--gold);background:rgba(201,169,110,0.06);}
+.player-score.active::before{content:'▶';position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:.6rem;}
+.ps-token{width:32px;height:32px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+.ps-token.p1{border-color:var(--p1);background:rgba(232,180,200,0.15);}
+.ps-token.p2{border-color:var(--p2);background:rgba(180,200,232,0.15);}
+.ps-info{flex:1;}
+.ps-name{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.2em;color:var(--gold-lt);font-weight:300;}
+.ps-money{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);}
+.ps-pos{font-size:.58rem;color:rgba(201,169,110,.5);margin-top:1px;}
+
+/* ── BOARD ── */
+.board-container{
+  width:min(860px,96vw);aspect-ratio:1;position:relative;
+  border:2px solid var(--gold);border-radius:4px;
+  box-shadow:0 0 0 4px #080507,0 0 0 5px var(--gold-dk),0 20px 60px rgba(201,169,110,.15),0 30px 80px rgba(0,0,0,.8);
+}
+.board-grid{
+  width:100%;height:100%;display:grid;
+  grid-template-columns:1fr repeat(9,1fr) 1fr;
+  grid-template-rows:1fr repeat(9,1fr) 1fr;
+  background:#F7F0E6;border-radius:3px;
+  overflow:hidden;
+}
+
+/* CENTER */
+.b-center{
+  grid-column:2/11;grid-row:2/11;
+  background:#F7F0E6;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  position:relative;
+}
+.b-center::after{content:'';position:absolute;inset:10px;border:1px solid rgba(201,169,110,.2);border-radius:2px;pointer-events:none;}
+.bc-byond{font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2.6rem);font-weight:400;letter-spacing:.45em;text-indent:.45em;
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold),var(--gold-dk));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+.bc-intima{font-family:'Cinzel',serif;font-size:clamp(.65rem,1.8vw,1.1rem);font-weight:300;letter-spacing:.6em;text-indent:.6em;
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:4px;}
+.bc-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:8px auto;}
+.bc-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px;max-width:220px;}
+.bc-leg{display:flex;align-items:center;gap:4px;font-family:'Cinzel',serif;font-size:clamp(.25rem,.55vw,.38rem);letter-spacing:.12em;color:#5A3A20;text-transform:uppercase;}
+.bc-dot{width:7px;height:7px;border-radius:50%;}
+
+/* CELLS */
+.bcell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:1px solid rgba(201,169,110,.25);font-size:clamp(.22rem,.55vw,.42rem);
+  text-align:center;padding:1px;position:relative;overflow:hidden;
+  background:#F7F0E6;cursor:pointer;transition:filter .15s;
+  font-family:'Heebo',sans-serif;font-weight:300;color:#2A1208;
+}
+.bcell:hover{filter:brightness(.92);}
+
+.band{position:absolute;}
+.bt{top:0;left:0;right:0;height:20%;}
+.bb{bottom:0;left:0;right:0;height:20%;}
+.bl{left:0;top:0;bottom:0;width:20%;}
+.br{right:0;top:0;bottom:0;width:20%;}
+.bd-c{background:var(--bedroom);}
+.kt-c{background:var(--kitchen);}
+.sl-c{background:var(--salon);}
+.sp-c{background:var(--spa);}
+.st-c{background:#3A3A3A;}
+
+.cn{font-weight:400;font-size:clamp(.22rem,.55vw,.42rem);color:#1A0A04;line-height:1.15;padding:0 1px;z-index:2;}
+.cp{font-family:'Cinzel',serif;font-size:clamp(.18rem,.42vw,.34rem);color:var(--gold-dk);z-index:2;margin-top:1px;}
+.rcw{writing-mode:vertical-rl;transform:rotate(180deg);}
+.rccw{writing-mode:vertical-rl;}
+.r180{transform:rotate(180deg);}
+.chance-cell{background:#1A0A04!important;position:relative;}
+.chance-cell::before{content:'';position:absolute;inset:3px;border:1px solid rgba(201,169,110,.35);border-radius:3px;pointer-events:none;z-index:1;}
+.chance-cell::after{content:'✦';position:absolute;bottom:3px;right:50%;transform:translateX(50%);font-size:clamp(.18rem,.4vw,.32rem);color:rgba(201,169,110,.5);z-index:1;}
+.chance-cell .cn{color:var(--gold)!important;font-weight:500;z-index:2;position:relative;}
+.tax-cell{background:#F0EBF5!important;}
+.tax-cell .cn{color:#5B3A7E;font-weight:500;}
+
+/* intimacy cell card style */
+.bcell[style*="background:#FDF0F5"]{position:relative;}
+
+/* CORNER */
+.bcorner{background:#1A0A04!important;border:1px solid var(--gold)!important;}
+.bc-in{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:4px;}
+.bc-ico{font-size:clamp(.8rem,2vw,1.4rem);line-height:1;margin-bottom:2px;}
+.bc-lbl{font-family:'Cinzel',serif;font-size:clamp(.22rem,.52vw,.4rem);color:var(--gold);letter-spacing:.08em;text-transform:uppercase;text-align:center;font-weight:300;line-height:1.25;}
+.bc-sub{font-family:'Cormorant Garamond',serif;font-size:clamp(.18rem,.42vw,.32rem);color:var(--gold-lt);font-style:italic;text-align:center;margin-top:2px;opacity:.65;}
+
+/* PLAYER TOKENS on board */
+.token-layer{position:absolute;inset:0;pointer-events:none;z-index:10;}
+.ptoken{
+  position:absolute;width:clamp(10px,2vw,16px);height:clamp(10px,2vw,16px);
+  border-radius:50%;border:2px solid;transform:translate(-50%,-50%);
+  transition:all .5s cubic-bezier(.4,0,.2,1);
+  display:flex;align-items:center;justify-content:center;font-size:.5rem;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);z-index:10;
+}
+.ptoken.p1{background:rgba(232,180,200,0.9);border-color:var(--p1);}
+.ptoken.p2{background:rgba(180,200,232,0.9);border-color:var(--p2);margin-left:18px;}
+
+/* ── CONTROLS ── */
+.controls{
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  width:100%;max-width:720px;
+}
+
+.dice-area{display:flex;align-items:center;gap:20px;}
+.die-display{
+  width:56px;height:56px;background:#1A0A04;border:1.5px solid var(--gold);
+  border-radius:10px;display:grid;place-items:center;
+  transition:transform .1s;position:relative;overflow:hidden;
+}
+.die-display.rolling{animation:dieRoll .5s ease-out;}
+@keyframes dieRoll{0%{transform:rotate(0)}25%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}75%{transform:rotate(-8deg)}100%{transform:rotate(0)}}
+.die-pips{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:3px;padding:8px;width:100%;height:100%;}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--gold);margin:auto;transition:opacity .2s;}
+.pip.off{opacity:0;}
+.die-sum{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;color:rgba(201,169,110,.6);}
+
+.btn-roll{
+  font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--black);background:linear-gradient(135deg,var(--gold-lt),var(--gold),var(--gold-dk));
+  border:none;border-radius:8px;padding:14px 32px;cursor:pointer;
+  font-weight:400;transition:transform .15s,box-shadow .15s;
+  box-shadow:0 4px 20px rgba(201,169,110,.3);
+}
+.btn-roll:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px rgba(201,169,110,.4);}
+.btn-roll:active:not(:disabled){transform:translateY(0);}
+.btn-roll:disabled{opacity:.4;cursor:not-allowed;}
+
+.btn-secondary{
+  font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.2em;
+  color:var(--gold);background:transparent;border:1px solid rgba(201,169,110,.35);
+  border-radius:8px;padding:10px 22px;cursor:pointer;
+  transition:all .15s;
+}
+.btn-secondary:hover{border-color:var(--gold);background:rgba(201,169,110,.06);}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  width:100%;max-width:720px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(201,169,110,.15);
+  border-radius:10px;padding:12px 18px;text-align:center;min-height:48px;
+  display:flex;align-items:center;justify-content:center;
+}
+.status-text{font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:var(--gold-lt);letter-spacing:.05em;}
+
+/* ── CARD MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  backdrop-filter:blur(8px);
+}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+
+.card-modal{
+  width:min(340px,90vw);
+  transform:scale(.8) translateY(30px);transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+}
+.modal-overlay.show .card-modal{transform:scale(1) translateY(0);}
+
+/* The card itself */
+.modal-card{
+  border-radius:20px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+
+/* card back reveal */
+.card-back-face{
+  background:#080507;border:1px solid rgba(201,169,110,.25);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 32px;text-align:center;min-height:320px;
+  position:relative;
+}
+.card-glow{position:absolute;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,169,110,.1),transparent 70%);}
+.card-back-face .mb-byond{font-family:'Cinzel',serif;font-size:2.2rem;font-weight:400;letter-spacing:.42em;text-indent:.42em;
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold),var(--gold-dk));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;position:relative;z-index:2;}
+.card-back-face .mb-intima{font-family:'Cinzel',serif;font-size:.9rem;font-weight:300;letter-spacing:.55em;text-indent:.55em;margin-top:6px;
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;z-index:2;}
+.mb-line{width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto;position:relative;z-index:2;}
+.mb-cat{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.25em;color:var(--gold);
+  border:1px solid rgba(201,169,110,.35);border-radius:20px;padding:6px 18px;
+  text-transform:uppercase;font-weight:300;position:relative;z-index:2;}
+.tap-hint{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.75rem;
+  color:rgba(201,169,110,.4);margin-top:20px;position:relative;z-index:2;
+  animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+
+/* card front */
+.card-front-face{
+  background:#fff;min-height:320px;
+  display:flex;flex-direction:column;
+}
+.cf-illo{
+  flex:0 0 35%;background:#FDF6EE;border-bottom:1px solid #EDD8C0;
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+}
+.cf-illo svg{position:absolute;inset:0;width:100%;height:100%;}
+.cf-num{position:absolute;top:10px;left:14px;font-family:'Cinzel',serif;font-size:.55rem;color:var(--gold);z-index:5;}
+.cf-text{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 24px;text-align:center;}
+.cf-zone{font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.28em;text-transform:uppercase;font-weight:400;margin-bottom:6px;}
+.cf-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;line-height:1.2;color:#1A0A04;margin-bottom:4px;}
+.cf-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;font-weight:300;margin-bottom:10px;}
+.cf-divider{width:30px;height:1px;margin:0 auto 10px;opacity:.4;}
+.cf-desc{font-size:.78rem;font-weight:300;line-height:1.65;color:#3A1A08;max-width:220px;}
+.cf-badge{display:inline-block;margin-top:10px;background:#FDF0E4;border:1px solid #D4A880;border-radius:20px;padding:5px 14px;font-size:.65rem;color:#8B3A1A;font-family:'Cormorant Garamond',serif;font-style:italic;}
+
+.card-flipped .card-back-face{display:none;}
+.card-not-flipped .card-front-face{display:none;}
+
+.modal-close{
+  position:absolute;bottom:-52px;left:50%;transform:translateX(-50%);
+  font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.2em;
+  color:rgba(201,169,110,.5);background:transparent;border:1px solid rgba(201,169,110,.2);
+  border-radius:20px;padding:8px 24px;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.modal-close:hover{color:var(--gold);border-color:rgba(201,169,110,.5);}
+
+/* ── PROPERTY POPUP ── */
+.prop-popup{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:90;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+  backdrop-filter:blur(6px);
+}
+.prop-popup.show{opacity:1;pointer-events:all;}
+.prop-popup-card{
+  background:#fff;border-radius:16px;padding:28px;max-width:300px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  transform:translateY(20px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.prop-popup.show .prop-popup-card{transform:translateY(0);}
+.pp-top{height:36px;display:flex;align-items:center;justify-content:center;margin:-28px -28px 16px;border-radius:16px 16px 0 0;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:#fff;}
+.pp-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:#1A0A04;margin-bottom:4px;}
+.pp-zone{font-family:'Cinzel',serif;font-size:.45rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;font-weight:300;}
+.pp-mission{background:#faf5ee;border:1px solid #e8d8c0;border-radius:8px;padding:10px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.75rem;color:#5A3A20;line-height:1.5;margin-bottom:12px;}
+.pp-action{display:flex;gap:8px;}
+.pp-btn{flex:1;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;border-radius:8px;padding:10px;cursor:pointer;border:none;transition:all .15s;}
+.pp-btn-buy{background:linear-gradient(135deg,var(--gold-lt),var(--gold));color:var(--black);}
+.pp-btn-pass{background:transparent;border:1px solid rgba(0,0,0,.2);color:#5A3A20;}
+.pp-price{font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold-dk);text-align:center;margin-bottom:10px;}
+.pp-owned{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.75rem;color:#7A4A28;text-align:center;margin-bottom:10px;}
+
+/* ── CORNER POPUP ── */
+.corner-popup{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:90;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+  backdrop-filter:blur(8px);
+}
+.corner-popup.show{opacity:1;pointer-events:all;}
+.corner-popup-box{
+  background:#0F080C;border:1px solid var(--gold);border-radius:16px;
+  padding:36px;max-width:320px;width:100%;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+  transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.corner-popup.show .corner-popup-box{transform:scale(1);}
+.cp-icon{font-size:2.8rem;margin-bottom:10px;}
+.cp-title{font-family:'Cinzel',serif;font-size:1rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+.cp-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:var(--gold-lt);opacity:.8;margin-bottom:16px;}
+.cp-desc{font-family:'Heebo',sans-serif;font-size:.78rem;font-weight:300;color:rgba(249,243,236,.75);line-height:1.7;margin-bottom:20px;}
+
+/* ── CARD DECKS SIDEBAR ── */
+.board-and-decks{display:flex;gap:20px;align-items:flex-start;width:100%;}
+.card-decks{display:flex;flex-direction:column;gap:16px;width:130px;flex-shrink:0;padding-top:4px;}
+.deck-stack{position:relative;width:110px;height:160px;cursor:pointer;transition:transform .2s;}
+.deck-stack:hover{transform:translateY(-4px);}
+.deck-card{
+  position:absolute;width:100%;height:100%;border-radius:12px;
+  border:1px solid rgba(201,169,110,.25);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;
+}
+.deck-card:nth-child(3){transform:rotate(-3deg) translate(-3px,3px);}
+.deck-card:nth-child(2){transform:rotate(-1.5deg) translate(-1.5px,1.5px);}
+.deck-card:nth-child(1){transform:rotate(0);}
+.deck-surprise .deck-card{background:#080507;}
+.deck-intimacy .deck-card{background:#0F0508;}
+.deck-card-inner{position:absolute;inset:5px;border-radius:8px;border:1px solid;}
+.deck-surprise .deck-card-inner{border-color:rgba(201,169,110,.3);}
+.deck-intimacy .deck-card-inner{border-color:rgba(139,48,88,.35);}
+.deck-logo{font-family:'Cinzel',serif;font-size:.38rem;letter-spacing:.3em;font-weight:300;}
+.deck-surprise .deck-logo{color:rgba(201,169,110,.6);}
+.deck-intimacy .deck-logo{color:rgba(212,120,154,.6);}
+.deck-icon{font-size:1.4rem;line-height:1;position:relative;z-index:2;}
+.deck-surprise .deck-icon{color:var(--gold);}
+.deck-intimacy .deck-icon{color:#D4789A;}
+.deck-label{font-family:'Cinzel',serif;font-size:.4rem;letter-spacing:.18em;text-transform:uppercase;font-weight:300;position:relative;z-index:2;}
+.deck-surprise .deck-label{color:var(--gold-lt);}
+.deck-intimacy .deck-label{color:#E8B4C8;}
+.deck-count{
+  position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;
+  font-family:'Cinzel',serif;font-size:.5rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;z-index:10;
+}
+.deck-surprise .deck-count{background:var(--gold);color:var(--black);}
+.deck-intimacy .deck-count{background:#8B3058;color:#fff;}
+.deck-title{font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-lt);text-align:center;margin-top:6px;font-weight:300;}
+.deck-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.6rem;color:rgba(201,169,110,.4);text-align:center;}
+
+/* ── IN-BOARD CARD PILES ── */
+.center-layout{
+  width:100%;height:100%;
+  display:grid;
+  grid-template-rows:1fr auto 1fr;
+  align-items:center;
+  justify-items:center;
+  padding:8px;
+  position:relative;z-index:1;
+}
+.center-piles-row{
+  display:flex;gap:clamp(6px,1.5vw,18px);justify-content:center;align-items:center;
+  width:100%;
+}
+.center-logo-block{display:flex;flex-direction:column;align-items:center;}
+
+/* mini card pile on board */
+.board-pile{
+  position:relative;
+  width:clamp(30px,5.5vw,64px);
+  height:clamp(44px,8vw,92px);
+  cursor:pointer;transition:transform .2s;
+  flex-shrink:0;
+}
+.board-pile:hover{transform:translateY(-4px) scale(1.05);}
+.board-pile-card{
+  position:absolute;width:100%;height:100%;
+  border-radius:clamp(3px,0.6vw,7px);
+  border:1px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+}
+.board-pile-card:nth-child(3){transform:rotate(-4deg) translate(-3px,3px);}
+.board-pile-card:nth-child(2){transform:rotate(-2deg) translate(-1.5px,1.5px);}
+.board-pile-card:nth-child(1){transform:none;}
+.bp-surprise .board-pile-card{background:#080507;border-color:rgba(201,169,110,.35);}
+.bp-intimacy .board-pile-card{background:#0F0508;border-color:rgba(139,48,88,.4);}
+.bp-inner{position:absolute;inset:clamp(2px,0.4vw,4px);border-radius:clamp(2px,0.4vw,5px);border:1px solid;}
+.bp-surprise .bp-inner{border-color:rgba(201,169,110,.25);}
+.bp-intimacy .bp-inner{border-color:rgba(139,48,88,.25);}
+.bp-icon{font-size:clamp(.5rem,1.2vw,1.4rem);line-height:1;position:relative;z-index:2;}
+.bp-surprise .bp-icon{color:var(--gold);}
+.bp-intimacy .bp-icon{color:#D4789A;}
+.bp-lbl{font-family:'Cinzel',serif;font-size:clamp(.15rem,.35vw,.38rem);letter-spacing:.06em;text-transform:uppercase;font-weight:300;position:relative;z-index:2;text-align:center;}
+.bp-surprise .bp-lbl{color:var(--gold-lt);}
+.bp-intimacy .bp-lbl{color:#E8B4C8;}
+.bp-tiny{font-family:'Cinzel',serif;font-size:clamp(.1rem,.25vw,.28rem);letter-spacing:.08em;position:relative;z-index:2;opacity:.5;}
+.bp-surprise .bp-tiny{color:var(--gold);}
+.bp-intimacy .bp-tiny{color:#D4789A;}
+</style>
+</head>
+<body>
+
+<div class="game-wrap">
+
+  <!-- Header -->
+  <div class="game-header">
+    <div class="gh-byond">BYOND</div>
+    <div class="gh-intima">INTIMA</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <div class="player-score active" id="ps1">
+      <div class="ps-token p1">♥</div>
+      <div class="ps-info">
+        <div class="ps-name">שחקן א׳</div>
+        <div class="ps-money" id="money1">♥ 500</div>
+        <div class="ps-pos" id="pos1">התחלה</div>
+      </div>
+    </div>
+    <div class="player-score" id="ps2">
+      <div class="ps-token p2">♦</div>
+      <div class="ps-info">
+        <div class="ps-name">שחקן ב׳</div>
+        <div class="ps-money" id="money2">♥ 500</div>
+        <div class="ps-pos" id="pos2">התחלה</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Board + Decks -->
+  <div class="board-and-decks">
+
+    <!-- Card Decks -->
+    <div class="card-decks">
+      <div>
+        <div class="deck-stack deck-surprise" onclick="drawCard('surprise')" title="משכו קלף הפתעה">
+          <div class="deck-card"><div class="deck-card-inner"></div></div>
+          <div class="deck-card"><div class="deck-card-inner"></div></div>
+          <div class="deck-card">
+            <div class="deck-card-inner"></div>
+            <div class="deck-logo">BYOND</div>
+            <div class="deck-icon">✦</div>
+            <div class="deck-label">הפתעה</div>
+            <div class="deck-logo">INTIMA</div>
+          </div>
+          <div class="deck-count deck-surprise" id="surpriseCount">8</div>
+        </div>
+        <div class="deck-title">קלפי הפתעה</div>
+        <div class="deck-sub">לחצו למשיכה</div>
+      </div>
+
+      <div>
+        <div class="deck-stack deck-intimacy" onclick="drawCard('intimacy')" title="משכו קלף אינטימיות">
+          <div class="deck-card"><div class="deck-card-inner"></div></div>
+          <div class="deck-card"><div class="deck-card-inner"></div></div>
+          <div class="deck-card">
+            <div class="deck-card-inner"></div>
+            <div class="deck-logo">BYOND</div>
+            <div class="deck-icon">♡</div>
+            <div class="deck-label">אינטימיות</div>
+            <div class="deck-logo">INTIMA</div>
+          </div>
+          <div class="deck-count deck-intimacy" id="intimacyCount">8</div>
+        </div>
+        <div class="deck-title">קלפי אינטימיות</div>
+        <div class="deck-sub">לחצו למשיכה</div>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div class="board-container" id="boardContainer" style="flex:1;">
+      <div class="board-grid" id="boardGrid"></div>
+      <div class="token-layer" id="tokenLayer">
+        <div class="ptoken p1" id="token1">♥</div>
+        <div class="ptoken p2" id="token2">♦</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-text" id="statusText">ברוכים הבאים! שחקן א׳ מתחיל — הטל קוביות</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="dice-area">
+      <div class="die-display" id="die1">
+        <div class="die-pips" id="pips1"></div>
+      </div>
+      <div class="die-sum" id="dieSum">?</div>
+      <div class="die-display" id="die2">
+        <div class="die-pips" id="pips2"></div>
+      </div>
+    </div>
+    <button class="btn-roll" id="btnRoll" onclick="rollDice()">הטל קוביות</button>
+    <button class="btn-secondary" onclick="endTurn()" id="btnEnd" style="display:none">סיים תור</button>
+  </div>
+
+</div>
+
+<!-- Card Modal -->
+<div class="modal-overlay" id="cardModal">
+  <div class="card-modal">
+    <div class="modal-card card-not-flipped" id="modalCard">
+      <div class="card-back-face" onclick="flipCard()" style="cursor:pointer">
+        <div class="card-glow"></div>
+        <div class="mb-byond">BYOND</div>
+        <div class="mb-intima">INTIMA</div>
+        <div class="mb-line"></div>
+        <div class="mb-cat" id="modalCatLabel">הפתעה</div>
+        <div class="tap-hint">לחצו לגלות את המשימה</div>
+      </div>
+      <div class="card-front-face">
+        <div class="cf-illo" id="cardIllo">
+          <div class="cf-num" id="cardNum">01</div>
+          <svg id="cardSvg" viewBox="0 0 340 120" fill="none"></svg>
+        </div>
+        <div class="cf-text">
+          <div class="cf-zone" id="cardZone">הפתעה</div>
+          <div class="cf-title" id="cardTitle">כותרת</div>
+          <div class="cf-sub" id="cardSub">כותרת משנה</div>
+          <div class="cf-divider" id="cardDiv"></div>
+          <div class="cf-desc" id="cardDesc">תיאור המשימה</div>
+          <div class="cf-badge" id="cardBadge">Badge</div>
+        </div>
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeCard()">המשיכו במשחק</button>
+  </div>
+</div>
+
+<!-- Property Popup -->
+<div class="prop-popup" id="propPopup">
+  <div class="prop-popup-card">
+    <div class="pp-top" id="ppTop">חדר שינה</div>
+    <div style="padding-top:8px">
+      <div class="pp-name" id="ppName">שם הנכס</div>
+      <div class="pp-zone" id="ppZone">אזור</div>
+      <div class="pp-mission" id="ppMission">משימה</div>
+      <div class="pp-price" id="ppPrice">♥ 100</div>
+      <div class="pp-owned" id="ppOwned" style="display:none"></div>
+      <div class="pp-action" id="ppAction">
+        <button class="pp-btn pp-btn-buy" onclick="buyProperty()">קנה ♥ <span id="ppBuyPrice"></span></button>
+        <button class="pp-btn pp-btn-pass" onclick="closePropPopup()">דלג</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Corner Popup -->
+<div class="corner-popup" id="cornerPopup">
+  <div class="corner-popup-box">
+    <div class="cp-icon" id="cpIcon">♡</div>
+    <div class="cp-title" id="cpTitle">פינה</div>
+    <div class="cp-sub" id="cpSub">תיאור</div>
+    <div class="cp-desc" id="cpDesc"></div>
+    <button class="btn-roll" style="font-size:.65rem;padding:12px 28px" onclick="closeCorner()">המשך</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// GAME DATA
+// ═══════════════════════════════
+const SQUARES = [
+  // BOTTOM ROW right→left (indices 0–10)
+  {id:0,  type:'corner',  name:'התחלה',          icon:'✦', sub:'עוברים — נשיקה + ♥ 200', desc:'כל פעם שעוברים על משבצת ההתחלה, מקבלים ♥ 200 ונשיקה אחת.'},
+  {id:1,  type:'property',zone:'bedroom',color:'#8B3058',name:'לחישת לילה',  price:60,  rent:[2,4,10,30,90],   mission:'לחשו סוד שלא סיפרתם לאף אחד'},
+  {id:2,  type:'property',zone:'bedroom',color:'#8B3058',name:'מגע ראשון',   price:60,  rent:[2,4,10,30,90],   mission:'עצמו עיניים ותנו מגע עדין לפנים'},
+  {id:3,  type:'tax',     name:'מס תשוקה',        amount:20, desc:'שלמו ♥ 20 לבנק — או בצעו משימה שמציע הצד השני'},
+  {id:4,  type:'station', name:'ספא אקספרס',      price:200, icon:'🌙'},
+  {id:5,  type:'property',zone:'kitchen',color:'#A0522D',name:'ארוחת בוקר במיטה',price:100,rent:[6,12,30,90,270], mission:'הכינו קפה זה לזה בלי לדבר'},
+  {id:6,  type:'chance',  name:'הפתעה ✦'},
+  {id:7,  type:'property',zone:'kitchen',color:'#A0522D',name:'שף ושפית',    price:100, rent:[6,12,30,90,270],  mission:'אחד מכתיב מה לבשל, השני מבצע'},
+  {id:8,  type:'property',zone:'kitchen',color:'#A0522D',name:'ארוחה ביין',  price:120, rent:[8,16,40,100,300], mission:'הגישו כוסית ואמרו לחיים עם משפט אחד'},
+  {id:9,  type:'property',zone:'kitchen',color:'#A0522D',name:'בישול רומנטי',price:140, rent:[10,20,50,150,450],mission:'בשלו ביחד תוך אחיזת יד כל הזמן'},
+  {id:10, type:'corner',  name:'זמן ביחד',         icon:'♡', sub:'עצרו — בחרו משימה', desc:'עצרו את המשחק ובחרו יחד פעילות: מסאז׳, שיחה, ריקוד, טיול — כל מה שמרגיש נכון.'},
+
+  // LEFT COL bottom→top (indices 11–19)
+  {id:11, type:'property',zone:'spa',color:'#5B3A7E',name:'עיסוי ידיים',    price:140, rent:[10,20,50,150,450], mission:'עיסוי ידיים של 2 דקות'},
+  {id:12, type:'property',zone:'spa',color:'#5B3A7E',name:'אמבטיית פרחים', price:140, rent:[10,20,50,150,450], mission:'תארו אמבטיה חלומית לשניכם'},
+  {id:13, type:'intimacy',name:'אינטימיות ♡'},
+  {id:14, type:'property',zone:'spa',color:'#5B3A7E',name:'נרות ועיסוי',   price:160, rent:[12,24,60,180,500], mission:'הדליקו נר וספרו דבר שמאיר אתכם'},
+  {id:15, type:'station', name:'חדר שינה אקספרס', price:200, icon:'🕯'},
+  {id:16, type:'property',zone:'spa',color:'#5B3A7E',name:'מסכת פנים',     price:180, rent:[14,28,70,210,550], mission:'הניחו מסכה — ושבו בשקט 5 דקות'},
+  {id:17, type:'tax',     name:'מס עונג',          amount:75,  desc:'שלמו ♥ 75 לבנק — או הציל את עצמכם בנשיקה ממושכת'},
+  {id:18, type:'property',zone:'spa',color:'#5B3A7E',name:'שמן ניחוחות',   price:200, rent:[16,32,80,240,600], mission:'עסו זה את זה עם שמן ריחני'},
+  {id:19, type:'property',zone:'spa',color:'#5B3A7E',name:'ג׳קוזי פרטי',   price:220, rent:[18,36,90,270,650], mission:'תארו חוויית ספא חלומית לשניכם'},
+
+  // TOP ROW left→right (indices 20–30)
+  {id:20, type:'corner',  name:'פינוק חופשי',      icon:'✧', sub:'בחרו פינוק לפי רצונכם', desc:'כל אחד מפנק את השני בדרך שהוא בוחר — ללא הגבלות, ללא תירוצים.'},
+  {id:21, type:'property',zone:'salon',color:'#2C4888',name:'שיחת לב',     price:220, rent:[16,32,80,240,600], mission:'ספרו על הרגע שהתאהבתם'},
+  {id:22, type:'property',zone:'salon',color:'#2C4888',name:'אמת או העזה', price:240, rent:[18,36,90,270,650], mission:'כל אחד שואל שאלה שתמיד רצה'},
+  {id:23, type:'chance',  name:'הפתעה ✦'},
+  {id:24, type:'property',zone:'salon',color:'#2C4888',name:'30 שניות',    price:260, rent:[20,40,100,300,700], mission:'30 שניות של מבט ישיר, ללא דיבור'},
+  {id:25, type:'station', name:'סלון אקספרס',      price:200, icon:'💫'},
+  {id:26, type:'property',zone:'salon',color:'#2C4888',name:'משחק קלפים',  price:260, rent:[20,40,100,300,700], mission:'שחקו קלפים — המפסיד מציע פינוק'},
+  {id:27, type:'tax',     name:'מס חיבור',          amount:100, desc:'שלמו ♥ 100 לבנק — או חבקו דקה שלמה ללא הפסקה'},
+  {id:28, type:'property',zone:'salon',color:'#2C4888',name:'ריקוד בסלון', price:300, rent:[22,44,110,330,800], mission:'רקדו דקה לשיר שאתם אוהבים'},
+  {id:29, type:'property',zone:'salon',color:'#2C4888',name:'סרט ביחד',    price:320, rent:[24,48,120,360,900], mission:'בחרו סרט שמתאים לשניכם'},
+  {id:30, type:'corner',  name:'הפסקת נשיקות',     icon:'◈', sub:'60 שניות — ללא הפסקה', desc:'עצרו הכל — 60 שניות של נשיקה מלאה, ללא הפרעות.'},
+
+  // RIGHT COL top→bottom (indices 31–39)
+  {id:31, type:'property',zone:'bedroom',color:'#8B3058',name:'מגע עדין',   price:300, rent:[22,44,110,330,800], mission:'מגע עדין — כל אחד עוצם עיניים תורו'},
+  {id:32, type:'property',zone:'bedroom',color:'#8B3058',name:'כרית ושמיכה',price:300, rent:[22,44,110,330,800], mission:'התכרבלו יחד 5 דקות בלי טלפון'},
+  {id:33, type:'intimacy',name:'אינטימיות ♡'},
+  {id:34, type:'property',zone:'bedroom',color:'#8B3058',name:'סוד בחושך',  price:320, rent:[24,48,120,360,900], mission:'כבו אורות — דברו 3 דקות בחושך'},
+  {id:35, type:'station', name:'מטבח אקספרס',      price:200, icon:'🍷'},
+  {id:36, type:'property',zone:'bedroom',color:'#8B3058',name:'חיבוק ארוך', price:350, rent:[28,56,140,420,1000],mission:'חיבוק עד שגוף השני מרגיש רגוע לגמרי'},
+  {id:37, type:'tax',     name:'מס חלומות',         amount:150, desc:'שלמו ♥ 150 לבנק — או ספרו חלום שיש לכם לעתיד'},
+  {id:38, type:'property',zone:'bedroom',color:'#8B3058',name:'לילה קסום',  price:400, rent:[35,70,175,500,1100],mission:'תארו לילה חלומי — ורשמו אותו'},
+  {id:39, type:'property',zone:'bedroom',color:'#8B3058',name:'חדר הדמיון', price:400, rent:[35,70,175,500,1100],mission:'תארו פנטזיה משותפת שתרצו לחיות'},
+];
+
+const SURPRISE_CARDS = [
+  {title:'נשיקת מדרגות',   sub:'עכשיו ממש',         desc:'קומו, גשו אחד לשני ותנו נשיקה שלא מתנצלת על עצמה.',            badge:'10 שניות לפחות', zone:'הפתעה'},
+  {title:'מחמאה אמיתית',   sub:'ישירה לעיניים',     desc:'תנו מחמאה אחת אמיתית — לא על המראה, על מי שהם.',              badge:'ללא גיגוך',       zone:'הפתעה'},
+  {title:'משאלה אחת',      sub:'מה תרצו ביחד?',     desc:'כל אחד אומר משאלה אחת — דבר שרוצים לחיות יחד השנה.',         badge:'ורשמו אותה',     zone:'הפתעה'},
+  {title:'מתנה ספונטנית',  sub:'ללא תירוצים',       desc:'תנו מתנה שלא עולה כסף — זמן, מחווה, הבטחה קטנה.',            badge:'עכשיו',           zone:'הפתעה'},
+  {title:'ריקוד ספונטני',  sub:'30 שניות',          desc:'הפסיקו הכל — הפעילו שיר ורקדו יחד ממש עכשיו.',               badge:'לא ניתן לסרב',   zone:'הפתעה'},
+  {title:'קבלו ♥ 50',      sub:'מתנה מהבנק',        desc:'הבנק מתגמל את האהבה שלכם — כל אחד מקבל ♥ 50!',              badge:'♥ +50 לכל שחקן', zone:'הפתעה', bonus:50},
+  {title:'שלמו ♥ 30',      sub:'מס אהבה',           desc:'האהבה עולה — שלמו ♥ 30 לבנק ובצעו נשיקה אחת.',              badge:'♥ -30',           zone:'הפתעה', tax:30},
+  {title:'העבירו נכס',     sub:'מחווה רומנטית',     desc:'תנו לצד השני נכס אחד שברשותכם — כמחווה של אהבה.',            badge:'בחרו בחכמה',     zone:'הפתעה'},
+];
+
+const INTIMACY_CARDS = [
+  {title:'שאלה עמוקה',     sub:'ללא פחד',           desc:'שאלו שאלה שתמיד רציתם לשאול אבל לא העזתם.',                  badge:'חייבים לענות',   zone:'אינטימיות'},
+  {title:'מבט של דקה',     sub:'ישר לעיניים',       desc:'שבו מול בעלת הבית — הסתכלו בעיניים, בשתיקה, דקה שלמה.',     badge:'בלי לצחוק',      zone:'אינטימיות'},
+  {title:'זיכרון משותף',   sub:'שניכם זוכרים',      desc:'ספרו כל אחד את אותו הרגע — מנקודת המבט שלו.',               badge:'ללא עריכות',     zone:'אינטימיות'},
+  {title:'חיבוק ארוך',     sub:'עד שנרגעים',        desc:'חיבקו עד שגוף השני מרגיש רגוע לגמרי — לא עוזבים לפני.',    badge:'לפחות 30 שניות', zone:'אינטימיות'},
+  {title:'מה אהבתי היום',  sub:'ספציפי ואמיתי',     desc:'כל אחד אומר דבר אחד שאהב בשני היום — רגע קטן שעשה הבדל.',  badge:'עיניים פתוחות',  zone:'אינטימיות'},
+  {title:'לחישה קרובה',    sub:'מאוד קרובים',       desc:'שבו צמוד לצמוד ולחשו את שמות של 3 דברים שאוהבים בשני.',    badge:'קרוב לאוזן',     zone:'אינטימיות'},
+  {title:'תודה אחת',       sub:'מהלב',              desc:'תנו תודה אמיתית — על משהו שנעשה בשבוע האחרון.',             badge:'עם פרטים',       zone:'אינטימיות'},
+  {title:'קבלו ♥ 80',      sub:'פרס אינטימיות',     desc:'הקשר שלכם שווה הכל — כל אחד מקבל ♥ 80!',                   badge:'♥ +80 לכל שחקן', zone:'אינטימיות', bonus:80},
+];
+
+// ═══════════════════════════════
+// GAME STATE
+// ═══════════════════════════════
+const state = {
+  currentPlayer: 0,
+  players: [
+    {name:'שחקן א׳', money:500, pos:0, token:'♥', color:'p1', properties:[]},
+    {name:'שחקן ב׳', money:500, pos:0, token:'♦', color:'p2', properties:[]},
+  ],
+  surpriseIdx: 0,
+  intimacyIdx: 0,
+  rolling: false,
+  waitingForCard: false,
+  currentPropSquare: null,
+};
+
+// Grid positions: which grid cell does square N map to?
+// Board is 11x11. Squares go: bottom-row RTL, left-col bottom-up, top-row LTR, right-col top-down
+function squareToGrid(idx) {
+  if (idx <= 10) {
+    // bottom row: col = 11-idx, row = 11
+    return {col: 11 - idx, row: 11};
+  } else if (idx <= 19) {
+    // left col: col=1, row = 11-(idx-10) = 21-idx
+    return {col: 1, row: 21 - idx};
+  } else if (idx <= 30) {
+    // top row: col = idx-19, row = 1
+    return {col: idx - 19, row: 1};
+  } else {
+    // right col: col=11, row = idx-29
+    return {col: 11, row: idx - 29};
+  }
+}
+
+// ═══════════════════════════════
+// BUILD BOARD
+// ═══════════════════════════════
+function buildBoard() {
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '';
+
+  // CENTER
+  const center = document.createElement('div');
+  center.className = 'b-center';
+  center.style.cssText = 'grid-column:2/11;grid-row:2/11;';
+  center.innerHTML = `
+    <div class="center-layout">
+
+      <!-- TOP ROW: 2 piles -->
+      <div class="center-piles-row">
+        <div class="board-pile bp-surprise" onclick="drawCard('surprise')" title="קלף הפתעה">
+          <div class="board-pile-card"><div class="bp-inner"></div></div>
+          <div class="board-pile-card"><div class="bp-inner"></div></div>
+          <div class="board-pile-card">
+            <div class="bp-inner"></div>
+            <div class="bp-tiny">BYOND</div>
+            <div class="bp-icon">✦</div>
+            <div class="bp-lbl">הפתעה</div>
+            <div class="bp-tiny">INTIMA</div>
+          </div>
+        </div>
+        <div class="board-pile bp-intimacy" onclick="drawCard('intimacy')" title="קלף אינטימיות">
+          <div class="board-pile-card"><div class="bp-inner"></div></div>
+          <div class="board-pile-card"><div class="bp-inner"></div></div>
+          <div class="board-pile-card">
+            <div class="bp-inner"></div>
+            <div class="bp-tiny">BYOND</div>
+            <div class="bp-icon">♡</div>
+            <div class="bp-lbl">אינטימיות</div>
+            <div class="bp-tiny">INTIMA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIDDLE: Logo + watermark -->
+      <div class="center-logo-block">
+        <div style="font-family:'Cinzel',serif;font-size:clamp(3.5rem,11vw,8.5rem);font-weight:700;color:rgba(160,82,45,0.3);letter-spacing:.1em;white-space:nowrap;user-select:none;line-height:1;margin-bottom:4px;">מונופול</div>
+        <div class="bc-line"></div>
+        <div class="bc-byond">BYOND</div>
+        <div class="bc-intima">INTIMA</div>
+        <div class="bc-line"></div>
+        <div class="bc-legend">
+          <div class="bc-leg"><div class="bc-dot" style="background:#8B3058"></div>חדר שינה</div>
+          <div class="bc-leg"><div class="bc-dot" style="background:#A0522D"></div>מטבח</div>
+          <div class="bc-leg"><div class="bc-dot" style="background:#2C4888"></div>סלון</div>
+          <div class="bc-leg"><div class="bc-dot" style="background:#5B3A7E"></div>ספא</div>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW: 2 piles (rotated 180) -->
+      <div class="center-piles-row">
+        <div class="board-pile bp-intimacy" onclick="drawCard('intimacy')" title="קלף אינטימיות" style="transform-origin:center;">
+          <div class="board-pile-card" style="transform:rotate(4deg) translate(3px,3px)"><div class="bp-inner"></div></div>
+          <div class="board-pile-card" style="transform:rotate(2deg) translate(1.5px,1.5px)"><div class="bp-inner"></div></div>
+          <div class="board-pile-card" style="transform:none">
+            <div class="bp-inner"></div>
+            <div class="bp-tiny">BYOND</div>
+            <div class="bp-icon">♡</div>
+            <div class="bp-lbl">אינטימיות</div>
+            <div class="bp-tiny">INTIMA</div>
+          </div>
+        </div>
+        <div class="board-pile bp-surprise" onclick="drawCard('surprise')" title="קלף הפתעה">
+          <div class="board-pile-card" style="transform:rotate(4deg) translate(3px,3px)"><div class="bp-inner"></div></div>
+          <div class="board-pile-card" style="transform:rotate(2deg) translate(1.5px,1.5px)"><div class="bp-inner"></div></div>
+          <div class="board-pile-card" style="transform:none">
+            <div class="bp-inner"></div>
+            <div class="bp-tiny">BYOND</div>
+            <div class="bp-icon">✦</div>
+            <div class="bp-lbl">הפתעה</div>
+            <div class="bp-tiny">INTIMA</div>
+          </div>
+        </div>
+      </div>
+
+    </div>`;
+  grid.appendChild(center);
+
+  // All 40 squares
+  SQUARES.forEach((sq, i) => {
+    const {col, row} = squareToGrid(i);
+    const el = document.createElement('div');
+    el.className = 'bcell';
+    el.id = `sq${i}`;
+    el.style.cssText = `grid-column:${col};grid-row:${row};`;
+    el.innerHTML = renderSquare(sq, i);
+    el.addEventListener('click', () => showSquareInfo(i));
+    grid.appendChild(el);
+  });
+}
+
+function bandDir(i) {
+  if (i <= 10)  return 'bt';
+  if (i <= 19)  return 'br';
+  if (i <= 30)  return 'bb';
+  return 'bl';
+}
+function rotClass(i) {
+  if (i >= 11 && i <= 19) return 'rcw';
+  if (i >= 20 && i <= 30) return 'r180';
+  if (i >= 31)            return 'rccw';
+  return '';
+}
+
+function renderSquare(sq, i) {
+  const rot = rotClass(i);
+  const bd = bandDir(i);
+
+  if (sq.type === 'corner') {
+    return `<div class="bcorner" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;">
+      <div class="bc-ico">${sq.icon}</div>
+      <div class="bc-lbl">${sq.name}</div>
+      <div class="bc-sub">${sq.sub}</div>
+    </div>`;
+  }
+  if (sq.type === 'property') {
+    const zoneClass = {bedroom:'bd-c',kitchen:'kt-c',salon:'sl-c',spa:'sp-c'}[sq.zone];
+    return `<div class="band ${bd} ${zoneClass}"></div>
+      <div class="cn ${rot}">${sq.name}</div>
+      <div class="cp ${rot}">♥ ${sq.price}</div>`;
+  }
+  if (sq.type === 'station') {
+    return `<div class="band ${bd} st-c"></div>
+      <div class="cn ${rot}">${sq.name}</div>
+      <div class="cp ${rot}">♥ 200</div>`;
+  }
+  if (sq.type === 'chance') {
+    return `<div style="position:absolute;inset:0;background:#1A0A04;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+      <div style="position:absolute;inset:3px;border:1px solid rgba(201,169,110,.4);border-radius:3px;pointer-events:none;"></div>
+      <div style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:clamp(.14rem,.32vw,.26rem);letter-spacing:.08em;color:rgba(201,169,110,.5);white-space:nowrap;">BYOND</div>
+      <div class="cn ${rot}" style="color:var(--gold);font-weight:600;font-family:'Cinzel',serif;font-size:clamp(.2rem,.5vw,.38rem);letter-spacing:.05em;position:relative;z-index:2;">✦</div>
+      <div class="cn ${rot}" style="color:var(--gold-lt);font-weight:300;font-family:'Cinzel',serif;font-size:clamp(.16rem,.38vw,.3rem);letter-spacing:.08em;position:relative;z-index:2;">הפתעה</div>
+      <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:clamp(.14rem,.32vw,.26rem);letter-spacing:.08em;color:rgba(201,169,110,.5);white-space:nowrap;">INTIMA</div>
+    </div>`;
+  }
+  if (sq.type === 'intimacy') {
+    return `<div style="position:absolute;inset:0;background:#1A0A04;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+      <div style="position:absolute;inset:3px;border:1px solid rgba(139,48,88,.5);border-radius:3px;pointer-events:none;"></div>
+      <div style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:clamp(.14rem,.32vw,.26rem);letter-spacing:.08em;color:rgba(139,48,88,.5);white-space:nowrap;">BYOND</div>
+      <div class="cn ${rot}" style="color:#D4789A;font-weight:600;font-family:'Cinzel',serif;font-size:clamp(.2rem,.5vw,.38rem);position:relative;z-index:2;">♡</div>
+      <div class="cn ${rot}" style="color:#E8B4C8;font-weight:300;font-family:'Cinzel',serif;font-size:clamp(.16rem,.38vw,.3rem);letter-spacing:.08em;position:relative;z-index:2;">אינטימיות</div>
+      <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:clamp(.14rem,.32vw,.26rem);letter-spacing:.08em;color:rgba(139,48,88,.5);white-space:nowrap;">INTIMA</div>
+    </div>`;
+  }
+  if (sq.type === 'tax') {
+    return `<div class="tax-cell" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="cn ${rot}" style="color:#5B3A7E;font-weight:500">${sq.name}</div>
+      <div class="cp ${rot}" style="color:#5B3A7E">♥ ${sq.amount}</div></div>`;
+  }
+  return `<div class="cn ${rot}">${sq.name}</div>`;
+}
+
+// ═══════════════════════════════
+// TOKEN POSITIONING
+// ═══════════════════════════════
+function updateTokens() {
+  const container = document.getElementById('boardContainer');
+  const w = container.offsetWidth;
+  const cellW = w / 11;
+
+  state.players.forEach((p, pi) => {
+    const {col, row} = squareToGrid(p.pos);
+    const token = document.getElementById(`token${pi+1}`);
+    const offset = pi === 0 ? -cellW*0.15 : cellW*0.15;
+    const x = (col - 0.5) * cellW + offset;
+    const y = (row - 0.5) * cellW;
+    token.style.left = x + 'px';
+    token.style.top  = y + 'px';
+  });
+}
+
+// ═══════════════════════════════
+// DICE
+// ═══════════════════════════════
+const PIPS_MAP = [
+  [],
+  [5],
+  [1,9],
+  [1,5,9],
+  [1,3,7,9],
+  [1,3,5,7,9],
+  [1,3,4,6,7,9],
+];
+
+function renderDie(containerId, val) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (let i=1; i<=9; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'pip' + (PIPS_MAP[val]?.includes(i) ? '' : ' off');
+    el.appendChild(pip);
+  }
+}
+
+function rollDice() {
+  if (state.rolling || state.waitingForCard) return;
+  state.rolling = true;
+  document.getElementById('btnRoll').disabled = true;
+
+  let ticks = 0;
+  const interval = setInterval(() => {
+    const r1 = Math.floor(Math.random()*6)+1;
+    const r2 = Math.floor(Math.random()*6)+1;
+    renderDie('pips1', r1);
+    renderDie('pips2', r2);
+    document.getElementById('dieSum').textContent = r1+r2;
+    document.getElementById('die1').classList.add('rolling');
+    document.getElementById('die2').classList.add('rolling');
+    ticks++;
+    if (ticks > 8) {
+      clearInterval(interval);
+      document.getElementById('die1').classList.remove('rolling');
+      document.getElementById('die2').classList.remove('rolling');
+      const d1 = Math.floor(Math.random()*6)+1;
+      const d2 = Math.floor(Math.random()*6)+1;
+      renderDie('pips1', d1);
+      renderDie('pips2', d2);
+      document.getElementById('dieSum').textContent = d1+d2;
+      state.rolling = false;
+      movePlayer(d1+d2);
+    }
+  }, 80);
+}
+
+// ═══════════════════════════════
+// MOVE PLAYER
+// ═══════════════════════════════
+function movePlayer(steps) {
+  const p = state.players[state.currentPlayer];
+  const oldPos = p.pos;
+  p.pos = (p.pos + steps) % 40;
+
+  // Passed start?
+  if (p.pos < oldPos) {
+    p.money += 200;
+    setStatus(`🎉 ${p.name} עברו על ההתחלה — קבלו ♥ 200 ונשיקה!`);
+    setTimeout(() => updateTokens(), 100);
+    setTimeout(() => landOn(p.pos), 700);
+  } else {
+    setTimeout(() => updateTokens(), 100);
+    setTimeout(() => landOn(p.pos), 500);
+  }
+  updateScores();
+}
+
+function landOn(pos) {
+  const sq = SQUARES[pos];
+  const p  = state.players[state.currentPlayer];
+
+  if (sq.type === 'corner') {
+    showCorner(sq);
+  } else if (sq.type === 'chance') {
+    drawCard('surprise');
+  } else if (sq.type === 'intimacy') {
+    drawCard('intimacy');
+  } else if (sq.type === 'tax') {
+    p.money = Math.max(0, p.money - sq.amount);
+    updateScores();
+    showCorner({icon:'💸', name:sq.name, sub:`שילמתם ♥ ${sq.amount}`, desc: sq.desc});
+  } else if (sq.type === 'property') {
+    handleProperty(pos);
+  } else if (sq.type === 'station') {
+    handleStation(pos);
+  } else {
+    setStatus(`${p.name} נחתו על ${sq.name}`);
+    showEndTurn();
+  }
+}
+
+// ═══════════════════════════════
+// PROPERTY HANDLING
+// ═══════════════════════════════
+function handleProperty(pos) {
+  const sq = SQUARES[pos];
+  const p  = state.players[state.currentPlayer];
+  const other = state.players[1 - state.currentPlayer];
+
+  if (sq.owner === undefined) {
+    // Unowned — offer to buy
+    showPropertyOffer(pos, sq, false, null);
+  } else if (sq.owner === state.currentPlayer) {
+    setStatus(`${p.name} נחתו על הנכס שלהם — ${sq.name}`);
+    showEndTurn();
+  } else {
+    // Pay rent
+    const rent = sq.rent[sq.houses || 0];
+    p.money = Math.max(0, p.money - rent);
+    other.money += rent;
+    updateScores();
+    setStatus(`${p.name} שילמו שכירות ♥ ${rent} עבור ${sq.name} — ובצעו את המשימה!`);
+    showPropertyOffer(pos, sq, true, rent);
+  }
+}
+
+function handleStation(pos) {
+  const sq = SQUARES[pos];
+  const p  = state.players[state.currentPlayer];
+  const other = state.players[1 - state.currentPlayer];
+
+  if (sq.owner === undefined) {
+    showPropertyOffer(pos, sq, false, null);
+  } else if (sq.owner === state.currentPlayer) {
+    setStatus(`${p.name} נחתו על התחנה שלהם — ${sq.name}`);
+    showEndTurn();
+  } else {
+    const stationsOwned = SQUARES.filter(s => s.type==='station' && s.owner === sq.owner).length;
+    const rent = 25 * stationsOwned;
+    p.money = Math.max(0, p.money - rent);
+    other.money += rent;
+    updateScores();
+    setStatus(`${p.name} שילמו ♥ ${rent} עבור תחנה — ${sq.name}`);
+    showPropertyOffer(pos, sq, true, rent);
+  }
+}
+
+let _pendingBuyPos = null;
+
+function showPropertyOffer(pos, sq, isRent, rentPaid) {
+  _pendingBuyPos = pos;
+  const p = state.players[state.currentPlayer];
+  const popup = document.getElementById('propPopup');
+  const zoneNames = {bedroom:'חדר שינה', kitchen:'מטבח', salon:'סלון', spa:'ספא', station:'תחנה'};
+  const zoneColors = {bedroom:'#8B3058', kitchen:'#A0522D', salon:'#2C4888', spa:'#5B3A7E'};
+  const zone = sq.zone || 'station';
+
+  document.getElementById('ppTop').style.background = zoneColors[zone] || '#3A3A3A';
+  document.getElementById('ppTop').textContent = zoneNames[zone] || 'תחנה';
+  document.getElementById('ppName').textContent = sq.name;
+  document.getElementById('ppZone').textContent = zoneNames[zone] || 'תחנה';
+  document.getElementById('ppZone').style.color = zoneColors[zone] || '#3A3A3A';
+  document.getElementById('ppMission').textContent = sq.mission || 'בצעו משימה מיוחדת';
+
+  if (isRent) {
+    document.getElementById('ppPrice').style.display = 'none';
+    document.getElementById('ppOwned').style.display = 'block';
+    document.getElementById('ppOwned').textContent = `שילמתם ♥ ${rentPaid} שכירות — ובצעו את המשימה!`;
+    document.getElementById('ppAction').innerHTML = `<button class="pp-btn pp-btn-buy" onclick="closePropPopup()">ביצענו ✓</button>`;
+  } else {
+    document.getElementById('ppPrice').style.display = 'block';
+    document.getElementById('ppPrice').textContent = `מחיר רכישה: ♥ ${sq.price}`;
+    document.getElementById('ppOwned').style.display = 'none';
+    document.getElementById('ppBuyPrice').textContent = sq.price;
+    document.getElementById('ppAction').innerHTML = p.money >= sq.price
+      ? `<button class="pp-btn pp-btn-buy" onclick="buyProperty()">קנה ♥ ${sq.price}</button><button class="pp-btn pp-btn-pass" onclick="closePropPopup()">דלג</button>`
+      : `<button class="pp-btn pp-btn-pass" style="flex:1" onclick="closePropPopup()">אין מספיק ♥</button>`;
+  }
+
+  popup.classList.add('show');
+}
+
+function buyProperty() {
+  if (_pendingBuyPos === null) return;
+  const sq = SQUARES[_pendingBuyPos];
+  const p  = state.players[state.currentPlayer];
+  if (p.money >= sq.price) {
+    p.money -= sq.price;
+    sq.owner = state.currentPlayer;
+    p.properties.push(_pendingBuyPos);
+    updateScores();
+    setStatus(`✓ ${p.name} רכשו את ${sq.name}!`);
+    // Highlight owned cell
+    const cell = document.getElementById(`sq${_pendingBuyPos}`);
+    if (cell) cell.style.outline = `2px solid ${state.currentPlayer === 0 ? 'rgba(232,180,200,0.7)' : 'rgba(180,200,232,0.7)'}`;
+  }
+  closePropPopup();
+  showEndTurn();
+}
+
+function closePropPopup() {
+  document.getElementById('propPopup').classList.remove('show');
+  _pendingBuyPos = null;
+  showEndTurn();
+}
+
+// ═══════════════════════════════
+// CARD DRAWING
+// ═══════════════════════════════
+function drawCard(type) {
+  state.waitingForCard = true;
+  const card = type === 'surprise'
+    ? SURPRISE_CARDS[state.surpriseIdx++ % SURPRISE_CARDS.length]
+    : INTIMACY_CARDS[state.intimacyIdx++ % INTIMACY_CARDS.length];
+
+  // Handle bonus/tax
+  if (card.bonus) {
+    state.players.forEach(p => p.money += card.bonus);
+    updateScores();
+  }
+  if (card.tax) {
+    const p = state.players[state.currentPlayer];
+    p.money = Math.max(0, p.money - card.tax);
+    updateScores();
+  }
+
+  // Set card content
+  document.getElementById('modalCatLabel').textContent = card.zone;
+  document.getElementById('cardZone').textContent = card.zone;
+  document.getElementById('cardTitle').textContent = card.title;
+  document.getElementById('cardSub').textContent = card.sub;
+  document.getElementById('cardDesc').textContent = card.desc;
+  document.getElementById('cardBadge').textContent = card.badge;
+  const color = type === 'surprise' ? '#9A7A48' : '#8B3058';
+  document.getElementById('cardZone').style.color = color;
+  document.getElementById('cardSub').style.color = color;
+  document.getElementById('cardDiv').style.background = color;
+
+  // Draw SVG illustration
+  drawCardSvg(type, card.title);
+
+  // Reset card to back
+  const mc = document.getElementById('modalCard');
+  mc.classList.remove('card-flipped');
+  mc.classList.add('card-not-flipped');
+
+  // Show modal
+  document.getElementById('cardModal').classList.add('show');
+  setStatus(`${state.players[state.currentPlayer].name} משכו קלף ${type === 'surprise' ? 'הפתעה' : 'אינטימיות'}`);
+}
+
+function flipCard() {
+  const mc = document.getElementById('modalCard');
+  mc.classList.remove('card-not-flipped');
+  mc.classList.add('card-flipped');
+}
+
+function closeCard() {
+  document.getElementById('cardModal').classList.remove('show');
+  state.waitingForCard = false;
+  showEndTurn();
+}
+
+function drawCardSvg(type, title) {
+  const svg = document.getElementById('cardSvg');
+  const svgs = {
+    surprise: `<rect width="340" height="120" fill="#FDF6EE"/>
+      <path d="M140 60 C140 44 155 36 170 44 C185 36 200 44 200 60 C200 78 170 92 170 92 C170 92 140 78 140 60Z" fill="none" stroke="#C9A96E" stroke-width="1.5"/>
+      <path d="M150 52 C150 46 158 42 164 46" stroke="#D4A880" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <circle cx="80" cy="35" r="3" fill="#E8D5B0"/>
+      <circle cx="260" cy="35" r="3" fill="#E8D5B0"/>
+      <path d="M76 48 Q80 42 84 48" stroke="#E8D5B0" stroke-width="1" fill="none"/>
+      <path d="M256 48 Q260 42 264 48" stroke="#E8D5B0" stroke-width="1" fill="none"/>`,
+    intimacy: `<rect width="340" height="120" fill="#FDF6EE"/>
+      <ellipse cx="150" cy="60" rx="38" ry="25" fill="none" stroke="#8B3058" stroke-width="1.5"/>
+      <circle cx="150" cy="60" r="8" fill="none" stroke="#8B3058" stroke-width="1.2"/>
+      <circle cx="150" cy="60" r="3" fill="#8B3058" opacity="0.4"/>
+      <ellipse cx="190" cy="60" rx="38" ry="25" fill="none" stroke="#D4789A" stroke-width="1.2"/>
+      <circle cx="190" cy="60" r="8" fill="none" stroke="#D4789A" stroke-width="1.2"/>
+      <circle cx="190" cy="60" r="3" fill="#D4789A" opacity="0.4"/>
+      <line x1="172" y1="60" x2="162" y2="60" stroke="#E8D5B0" stroke-width="1" stroke-dasharray="3,2"/>
+      <circle cx="80" cy="35" r="2" fill="#E8D5B0"/>
+      <circle cx="260" cy="35" r="2" fill="#E8D5B0"/>`
+  };
+  svg.innerHTML = svgs[type] || svgs.surprise;
+}
+
+// ═══════════════════════════════
+// CORNER POPUP
+// ═══════════════════════════════
+function showCorner(sq) {
+  document.getElementById('cpIcon').textContent  = sq.icon  || '✦';
+  document.getElementById('cpTitle').textContent = sq.name;
+  document.getElementById('cpSub').textContent   = sq.sub   || '';
+  document.getElementById('cpDesc').textContent  = sq.desc  || '';
+  document.getElementById('cornerPopup').classList.add('show');
+}
+
+function closeCorner() {
+  document.getElementById('cornerPopup').classList.remove('show');
+  showEndTurn();
+}
+
+// ═══════════════════════════════
+// TURN MANAGEMENT
+// ═══════════════════════════════
+function showEndTurn() {
+  const p = state.players[state.currentPlayer];
+  setStatus(`${p.name} — סיימו את התור שלכם`);
+  document.getElementById('btnEnd').style.display = 'block';
+  document.getElementById('btnRoll').disabled = true;
+}
+
+function endTurn() {
+  state.currentPlayer = 1 - state.currentPlayer;
+  const next = state.players[state.currentPlayer];
+  document.getElementById('btnEnd').style.display = 'none';
+  document.getElementById('btnRoll').disabled = false;
+  setStatus(`תור ${next.name} — הטל קוביות`);
+  updateScores();
+
+  // Update active player highlight
+  document.getElementById('ps1').classList.toggle('active', state.currentPlayer === 0);
+  document.getElementById('ps2').classList.toggle('active', state.currentPlayer === 1);
+}
+
+function showSquareInfo(i) {
+  // Just a quick visual hint on which square is which
+}
+
+// ═══════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════
+function setStatus(msg) {
+  document.getElementById('statusText').textContent = msg;
+}
+
+function updateScores() {
+  state.players.forEach((p, i) => {
+    document.getElementById(`money${i+1}`).textContent = `♥ ${p.money}`;
+    const sq = SQUARES[p.pos];
+    document.getElementById(`pos${i+1}`).textContent = sq ? sq.name : '—';
+  });
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+buildBoard();
+updateTokens();
+renderDie('pips1', 1);
+renderDie('pips2', 1);
+
+window.addEventListener('resize', updateTokens);
+</script>
+</body>
+</html>
