@@ -1,0 +1,5 @@
+.venv/
+video-studio/node_modules/
+temp/
+*.pyc
+__pycache__/
