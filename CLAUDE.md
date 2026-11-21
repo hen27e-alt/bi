@@ -91,3 +91,76 @@ cd video-studio && npx remotion render \
 - אל תשאל שאלות ביניים — הרץ כל שלב עד הסוף
 - כל קובץ ביניים ל-`temp/`, רק תוצר סופי ל-`output/`
 - דווח על כל שלב עם זמן ריצה וגודל קובץ
+
+---
+
+## ערוץ "חזרה לעבר" — פרוטוקול בקשת שיר
+
+### זיהוי בקשה אוטומטי
+כל הודעה שמכילה **שם זמר + שם שיר** (עם או בלי שנה/ג'אנר) מפעילה את הזרימה הזו.
+לא צריך פקודה מפורשת — גם "תעשה סרטון על Thriller של מייקל ג'קסון" מספיק.
+
+### שלבי הזרימה (הפעל בסדר)
+
+#### שלב 0 — פרמטרים
+חלץ מההודעה (ואם חסר, שאל שאלה אחת בלבד):
+| פרמטר | חובה | ברירת מחדל |
+|--------|------|------------|
+| `--artist` | כן | — |
+| `--song` | כן | — |
+| `--year` | לא | שנה ידועה / "?" |
+| `--genre` | לא | "pop" |
+| `--source` | לא | ריק (nnSUאנסה הורדה) |
+| `--clip-start` | לא | 0 |
+| `--clip-duration` | לא | 30 |
+
+#### שלב 1 — הרץ pipeline מלא
+```bash
+.venv/bin/python scripts/channel_video.py \
+  --artist "ARTIST" --song "SONG" --year YEAR --genre "GENRE" \
+  [--source input/FILE.mp4] [--clip-start SEC] [--clip-duration SEC]
+```
+
+הסקריפט מבצע **אוטומטית**:
+1. חיפוש קובץ מקומי ב-`input/` → הורדת yt-dlp אם לא קיים
+2. חיתוך קטע (`--clip-start` / `--clip-duration`)
+3. ניקוי שתיקות (auto-editor)
+4. נרמול אודיו (-14 LUFS, FFmpeg two-pass)
+5. Remotion render של `ChannelBranding` (9:16, 1080×1920)
+6. ייצוא ל-`output/{artist}_{song}_final.mp4`
+
+#### טיפול בחסימת הורדה
+אם yt-dlp נחסם (429/bot-detection/timeout):
+- הסבר קצר (שורה אחת)
+- בקש: "שים קובץ ב-`input/` ואציין `--source`"
+- אל תנסה שוב ללא מקור חדש
+
+### ערכת הז'אנרים (`video-studio/src/themes.ts`)
+| מפתח | ג'אנר | אקסנט | עידן |
+|------|-------|-------|------|
+| `jazz` | Jazz | זהב | שנות ה-40–50 |
+| `blues` | Blues | כחול | שנות ה-50–60 |
+| `rock` | Rock | אדום | שנות ה-60–70 |
+| `funk` | Funk/Soul | ענבר | שנות ה-70–80 |
+| `disco` | Disco | זהב ניאון | שנות ה-70 |
+| `pop_80s` | Pop | ורוד ניאון | שנות ה-80 |
+| `synth` | Synth/Electronic | טורקיז | שנות ה-80 |
+| `new_wave` | New Wave | סגול | שנות ה-80 |
+| `hip_hop` | Hip-Hop | זהב | שנות ה-90 |
+| `grunge` | Grunge/Alt | ירוק-אפור | שנות ה-90 |
+| `rnb` | R&B | סגול | שנות ה-90–2000 |
+| `default` | כל השאר | ענבר (#F5A800) | — |
+
+### Remotion compositions
+| ID | תיאור |
+|----|-------|
+| `ChannelBranding` | סרטון ערוץ 9:16: כרטיס פתיחה (3s) + וידאו + שכבת מיתוג |
+| `CaptionedVideo` | כתוביות ריילס/טיקטוק 9:16 |
+| `CaptionedVideoWide` | כתוביות יוטיוב 16:9 |
+
+### render ידני (ללא סקריפט)
+```bash
+cd video-studio && npx remotion render src/index.ts ChannelBranding \
+  ../output/OUTPUT.mp4 \
+  --props '{"src":"../temp/NORM.mp4","artist":"NAME","song":"TITLE","year":"1980","genre":"rock","themeKey":"rock","durationInFrames":900}'
+```
