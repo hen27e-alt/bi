@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "shorts": {
+      "source": "agricidaniel/claude-shorts",
+      "commit": "a369fad9d84287edbb8fa3ab515f268e770f683b",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "8fccff096882b8b22a0bdd39eaf308c4863f0861b7a786760e3c7ea0d1f6b3f3"
+    }
+  }
+}
