@@ -457,7 +457,7 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.5;}
 // ═══════════════════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════════════════
-const SK = 'crm_pro_v2';
+const SK = 'crm_pro_v3';
 let S = {
   view: 'dashboard', pid: null, tab: 'overview',
   projects: [], posts: [], apps: [],
@@ -1070,17 +1070,68 @@ function postStatusLbl(s){return{sent:'נשלח',scheduled:'מתוזמן',draft:
 // ═══════════════════════════════════════════════════════════════
 load();
 if(S.projects.length===0){
-  S.projects.push({
-    id:uid(),name:'פרוייקט ראשון',emoji:'🚀',description:'ברוך הבא למערכת CRM Pro — מערכת לניהול פרוייקטים ומדיה חברתית.',
-    status:'active',category:'כללי',
+  const now=Date.now();
+  S.projects=[{
+    id:uid(),name:'ביונד אינטימה',emoji:'💜',
+    description:'משחק לוח אינטימי וחברתי לזוגות וחברים — חוויה ייחודית של קרבה וחשיפה.',
+    status:'active',category:'משחק',
     tasks:[
-      {id:uid(),text:'הכר את המערכת',done:true,priority:'high',createdAt:Date.now()},
-      {id:uid(),text:'צור פרוייקט ראשון',done:false,priority:'med',createdAt:Date.now()},
-      {id:uid(),text:'חבר פלטפורמות מדיה חברתית',done:false,priority:'low',createdAt:Date.now()}
+      {id:uid(),text:'עיצוב לוח המשחק וכרטיסיות',done:true,priority:'high',createdAt:now},
+      {id:uid(),text:'פיתוח גרסת אפליקציה מובייל',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'קמפיין שיווק ברשתות חברתיות',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'הגשה לחנויות אפליקציות',done:false,priority:'low',createdAt:now}
     ],
-    notes:[{id:uid(),title:'ברוך הבא!',body:'ניתן ליצור פרוייקטים, להוסיף משימות, הערות, אנשי קשר ולפרסם תוכן לכל הרשתות החברתיות.',createdAt:Date.now()}],
-    contacts:[],campaigns:[],createdAt:Date.now()
-  });
+    notes:[{id:uid(),title:'קונספט',body:'משחק שמביא זוגות וחברים קרובים יותר דרך שאלות ואתגרים מותאמים. כבר יש גרסת לוח — השלב הבא הוא אפליקציה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'קליניקמייט',emoji:'🏥',
+    description:'מערכת ניהול חכמה לקליניקות ומטפלים — תיאום תורים, תיקי מטופלים ומעקב טיפולים.',
+    status:'active',category:'SaaS',
+    tasks:[
+      {id:uid(),text:'מפרט דרישות ופונקציות מערכת',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב UI/UX לממשק הקליניקה',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'פיתוח מודול תיאום תורים',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'אינטגרציה עם מערכות תשלום',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'רעיון מרכזי',body:'מערכת CRM ייעודית למטפלים — טיפול בתיקי מטופלים, תזכורות אוטומטיות, וניהול תשלומים במקום אחד.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'פרחי באך',emoji:'🌸',
+    description:'אפליקציה לאבחון עצמי ובחירת פרחי באך — 38 פרחים, מדריך אישי ומעקב טיפול.',
+    status:'active',category:'בריאות',
+    tasks:[
+      {id:uid(),text:'תיעוד כל 38 פרחי באך עם תיאורים',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'בניית שאלון אבחון עצמי',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב אפליקציה — פלטה צבעים רכה',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'שיווק לקהל מטפלים הוליסטיים',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'קהל יעד',body:'מטפלים הוליסטיים, אנשים המחפשים רפואה משלימה, ומתעניינים בבריאות רגשית טבעית.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'כדור בדולח',emoji:'🔮',
+    description:'אפליקציית AI לניחושים, תחזיות ואסטרולוגיה — חוויה מיסטית מתקדמת.',
+    status:'active',category:'בידור',
+    tasks:[
+      {id:uid(),text:'הגדרת קונספט ואופי האפליקציה',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב ממשק מיסטי וייחודי',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'שילוב AI לתחזיות מותאמות אישית',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'בניית מנוע אסטרולוגיה',done:false,priority:'med',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'ויב',body:'עיצוב כהה, כוכבים, אנימציות מיסטיות. חוויה שמרגישה אמיתית ומיוחדת — לא עוד אפליקציית הורוסקופ רגילה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  },{
+    id:uid(),name:'אפליקציית משחקים',emoji:'🎮',
+    description:'פלטפורמת משחקים מגוונת — ​מינגלים, טריוויה, אתגרים חברתיים ועוד.',
+    status:'active',category:'משחקים',
+    tasks:[
+      {id:uid(),text:'רשימת משחקים שייכנסו לאפליקציה',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'עיצוב מערכת ניקוד ומשחק מרובה משתתפים',done:false,priority:'high',createdAt:now},
+      {id:uid(),text:'פיתוח משחק ראשון כ-MVP',done:false,priority:'med',createdAt:now},
+      {id:uid(),text:'אסטרטגיית מונטיזציה',done:false,priority:'low',createdAt:now}
+    ],
+    notes:[{id:uid(),title:'גישה',body:'אוסף משחקים חברתיים שאפשר לשחק עם חברים. מתאים למסיבות, ערבי חברים, זוגות. ביונד אינטימה יכול להיות אחד המשחקים פנימה.',createdAt:now}],
+    contacts:[],campaigns:[],createdAt:now
+  }];
   save();
 }
 syncNav();syncTopbar();render();
