@@ -392,48 +392,7 @@ html,body{width:100%;min-height:100%;background:#080507;font-family:'Heebo',sans
 </head>
 <body>
 
-<!-- ══ SETUP SCREEN ══ -->
-<div id="setupScreen" style="position:fixed;inset:0;background:#080507;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;overflow-y:auto;">
-  <div style="max-width:360px;width:100%;display:flex;flex-direction:column;align-items:center;gap:24px;">
-    <div style="text-align:center;">
-      <div style="font-family:'Cinzel',serif;font-size:3rem;font-weight:400;letter-spacing:.45em;text-indent:.45em;background:linear-gradient(180deg,#E8D5B0,#C9A96E,#9A7A48);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">BYOND</div>
-      <div style="font-family:'Cinzel',serif;font-size:.85rem;font-weight:300;letter-spacing:.6em;text-indent:.6em;background:linear-gradient(180deg,#E8D5B0,#C9A96E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:4px;">INTIMA</div>
-      <div style="width:80px;height:1px;background:linear-gradient(90deg,transparent,#C9A96E,transparent);margin:14px auto;"></div>
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:rgba(201,169,110,.55);">משחק לוח לזוגות וחברים קרובים</div>
-    </div>
-    <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
-      <div style="font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.2em;color:rgba(201,169,110,.5);text-align:center;text-transform:uppercase;margin-bottom:2px;">שם שחקנים</div>
-      <div style="position:relative;">
-        <div style="position:absolute;top:50%;transform:translateY(-50%);right:14px;width:20px;height:20px;border-radius:50%;background:rgba(232,180,200,.2);border:1.5px solid #E8B4C8;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#E8B4C8;pointer-events:none;">♥</div>
-        <input id="p1name" type="text" placeholder="שחקן א׳ — שמך" maxlength="20"
-          style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(201,169,110,.2);border-radius:10px;padding:14px 42px 14px 16px;color:#F9F3EC;font-family:'Heebo',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;text-align:right;"
-          onfocus="this.style.borderColor='rgba(201,169,110,.5)'" onblur="this.style.borderColor='rgba(201,169,110,.2)'">
-      </div>
-      <div style="position:relative;">
-        <div style="position:absolute;top:50%;transform:translateY(-50%);right:14px;width:20px;height:20px;border-radius:50%;background:rgba(180,200,232,.2);border:1.5px solid #B4C8E8;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#B4C8E8;pointer-events:none;">♦</div>
-        <input id="p2name" type="text" placeholder="שחקן ב׳ — שמך" maxlength="20"
-          style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(201,169,110,.2);border-radius:10px;padding:14px 42px 14px 16px;color:#F9F3EC;font-family:'Heebo',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;text-align:right;"
-          onfocus="this.style.borderColor='rgba(201,169,110,.5)'" onblur="this.style.borderColor='rgba(201,169,110,.2)'">
-      </div>
-    </div>
-    <button onclick="startGame()" style="width:100%;font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:#080507;background:linear-gradient(135deg,#E8D5B0,#C9A96E,#9A7A48);border:none;border-radius:10px;padding:16px 32px;cursor:pointer;font-weight:400;box-shadow:0 4px 24px rgba(201,169,110,.3);transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 32px rgba(201,169,110,.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 24px rgba(201,169,110,.3)'">התחל במשחק ✦</button>
-    <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.72rem;color:rgba(201,169,110,.3);text-align:center;line-height:1.6;">לוח 40 משבצות · קלפי הפתעה ואינטימיות<br>נכסים, שכירות ומשימות לזוגות</div>
-  </div>
-</div>
-
-<!-- ══ WIN SCREEN ══ -->
-<div id="winScreen" style="position:fixed;inset:0;background:rgba(8,5,7,.96);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;backdrop-filter:blur(8px);">
-  <div style="max-width:340px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;">
-    <div style="font-size:3rem;" id="winEmoji">🏆</div>
-    <div style="font-family:'Cinzel',serif;font-size:1.5rem;letter-spacing:.2em;background:linear-gradient(180deg,#E8D5B0,#C9A96E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="winTitle">ניצחון!</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:rgba(201,169,110,.7);" id="winSub">המשחק הסתיים</div>
-    <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#C9A96E,transparent);"></div>
-    <div style="font-family:'Heebo',sans-serif;font-size:.82rem;color:rgba(249,243,236,.55);line-height:1.7;" id="winDesc"></div>
-    <button onclick="resetGame()" style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:#080507;background:linear-gradient(135deg,#E8D5B0,#C9A96E);border:none;border-radius:10px;padding:14px 32px;cursor:pointer;margin-top:8px;">משחק חדש</button>
-  </div>
-</div>
-
-<div class="game-wrap" id="gameWrap" style="display:none;">
+<div class="game-wrap">
 
   <!-- Header -->
   <div class="game-header">
@@ -447,7 +406,7 @@ html,body{width:100%;min-height:100%;background:#080507;font-family:'Heebo',sans
     <div class="player-score active" id="ps1">
       <div class="ps-token p1">♥</div>
       <div class="ps-info">
-        <div class="ps-name" id="pname1">שחקן א׳</div>
+        <div class="ps-name">שחקן א׳</div>
         <div class="ps-money" id="money1">♥ 500</div>
         <div class="ps-pos" id="pos1">התחלה</div>
       </div>
@@ -455,7 +414,7 @@ html,body{width:100%;min-height:100%;background:#080507;font-family:'Heebo',sans
     <div class="player-score" id="ps2">
       <div class="ps-token p2">♦</div>
       <div class="ps-info">
-        <div class="ps-name" id="pname2">שחקן ב׳</div>
+        <div class="ps-name">שחקן ב׳</div>
         <div class="ps-money" id="money2">♥ 500</div>
         <div class="ps-pos" id="pos2">התחלה</div>
       </div>
@@ -1222,49 +1181,15 @@ function updateScores() {
     const sq = SQUARES[p.pos];
     document.getElementById(`pos${i+1}`).textContent = sq ? sq.name : '—';
   });
-  setTimeout(checkWin, 400);
 }
 
 // ═══════════════════════════════
 // INIT
 // ═══════════════════════════════
-function startGame() {
-  const n1 = document.getElementById('p1name').value.trim() || 'שחקן א׳';
-  const n2 = document.getElementById('p2name').value.trim() || 'שחקן ב׳';
-  state.players[0].name = n1;
-  state.players[1].name = n2;
-  document.getElementById('pname1').textContent = n1;
-  document.getElementById('pname2').textContent = n2;
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('gameWrap').style.display = '';
-  buildBoard();
-  updateTokens();
-  renderDie('pips1', 1);
-  renderDie('pips2', 1);
-  setStatus(`ברוכים הבאים ${n1} ו-${n2}! ${n1} מתחיל — הטל קוביות`);
-}
-
-function checkWin() {
-  const loser = state.players.find(p => p.money <= 0);
-  if (!loser) return;
-  const winner = state.players.find(p => p !== loser);
-  document.getElementById('winTitle').textContent = `${winner.name} ניצח!`;
-  document.getElementById('winSub').textContent = `${loser.name} נשאר ללא נקודות`;
-  document.getElementById('winDesc').textContent = `מזל טוב! המשחק הסתיים עם ${winner.money} נקודות אהבה. תמיד אפשר לשחק שוב — ולגלות צדדים חדשים.`;
-  document.getElementById('winScreen').style.display = 'flex';
-}
-
-function resetGame() {
-  state.players.forEach((p,i) => { p.money=500; p.pos=0; p.properties=[]; });
-  state.currentPlayer=0; state.surpriseIdx=0; state.intimacyIdx=0;
-  state.rolling=false; state.waitingForCard=false;
-  SQUARES.forEach(sq => { delete sq.owner; delete sq.houses; });
-  document.getElementById('winScreen').style.display = 'none';
-  document.getElementById('setupScreen').style.display = 'flex';
-  document.getElementById('gameWrap').style.display = 'none';
-  document.getElementById('p1name').value = '';
-  document.getElementById('p2name').value = '';
-}
+buildBoard();
+updateTokens();
+renderDie('pips1', 1);
+renderDie('pips2', 1);
 
 window.addEventListener('resize', updateTokens);
 </script>
