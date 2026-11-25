@@ -1192,6 +1192,133 @@ renderDie('pips1', 1);
 renderDie('pips2', 1);
 
 window.addEventListener('resize', updateTokens);
+
+// ═══════════════════════════════
+// AMBIENT PARTICLE ANIMATION — bottom-left
+// ═══════════════════════════════
+(function() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'ambientCanvas';
+  canvas.style.cssText = 'position:fixed;bottom:0;left:0;width:220px;height:320px;pointer-events:none;z-index:1000;';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  canvas.width  = 220;
+  canvas.height = 320;
+
+  const PALETTE = [
+    {r:201,g:169,b:110},  // gold
+    {r:232,g:180,b:200},  // rose pink
+    {r:139,g:48, b:88 },  // deep rose
+    {r:232,g:213,b:176},  // gold light
+    {r:91, g:58, b:126},  // soft violet
+  ];
+
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+
+  // Petal shape drawn as a soft teardrop
+  function drawPetal(x, y, size, angle, alpha, col) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, -size);
+    ctx.bezierCurveTo( size*0.6, -size*0.6,  size*0.6,  size*0.4, 0,  size*0.5);
+    ctx.bezierCurveTo(-size*0.6,  size*0.4, -size*0.6, -size*0.6, 0, -size);
+    ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},1)`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Sparkle — small 4-point star
+  function drawSparkle(x, y, size, alpha, col) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      const x0 = Math.cos(a) * size;
+      const y0 = Math.sin(a) * size;
+      const x1 = Math.cos(a + Math.PI/4) * size * 0.3;
+      const y1 = Math.sin(a + Math.PI/4) * size * 0.3;
+      if (i === 0) ctx.moveTo(x0, y0);
+      else ctx.lineTo(x0, y0);
+      ctx.lineTo(x1, y1);
+    }
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},1)`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  const particles = [];
+
+  function spawn() {
+    const isPetal = Math.random() > 0.35;
+    const col = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    particles.push({
+      x:      rnd(10, 200),
+      y:      canvas.height + rnd(0, 20),
+      vx:     rnd(-0.4, 0.4),
+      vy:     rnd(-0.5, -1.1),
+      size:   isPetal ? rnd(3.5, 7) : rnd(1.5, 3.5),
+      angle:  rnd(0, Math.PI * 2),
+      spin:   rnd(-0.015, 0.015),
+      alpha:  0,
+      fadeIn: rnd(0.008, 0.015),
+      life:   1,
+      decay:  rnd(0.004, 0.009),
+      col,
+      isPetal,
+      sway:   rnd(0.008, 0.02),
+      swayOff:rnd(0, Math.PI * 2),
+    });
+  }
+
+  let frame = 0;
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // spawn rate — one every ~40 frames
+    if (frame % 40 === 0 && particles.length < 18) spawn();
+    frame++;
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+
+      // fade in then hold then fade out
+      if (p.alpha < 1 && p.life > 0.5) p.alpha = Math.min(1, p.alpha + p.fadeIn);
+      p.life -= p.decay;
+      if (p.life < 0.35) p.alpha = Math.max(0, p.alpha - 0.012);
+
+      p.x += p.vx + Math.sin(frame * p.sway + p.swayOff) * 0.3;
+      p.y += p.vy;
+      p.angle += p.spin;
+
+      if (p.life <= 0 || p.alpha <= 0 || p.y < -20) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      if (p.isPetal) drawPetal(p.x, p.y, p.size, p.angle, p.alpha * 0.72, p.col);
+      else           drawSparkle(p.x, p.y, p.size, p.alpha * 0.65, p.col);
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  // seed a few particles immediately
+  for (let i = 0; i < 6; i++) {
+    spawn();
+    const p = particles[particles.length - 1];
+    p.y = rnd(60, canvas.height - 10);
+    p.alpha = rnd(0.1, 0.5);
+  }
+
+  loop();
+})();
 </script>
 </body>
 </html>
